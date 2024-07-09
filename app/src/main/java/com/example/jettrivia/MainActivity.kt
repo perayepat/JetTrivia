@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jettrivia.model.Question
 import com.example.jettrivia.screens.QuestionsViewModel
+import com.example.jettrivia.screens.TriviaHome
 import com.example.jettrivia.ui.theme.JetTriviaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -46,20 +47,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Composable
-fun TriviaHome(viewModel: QuestionsViewModel = hiltViewModel()){
-    Questions(viewModel)
-}
 
-@Composable
-fun Questions(viewmodel: QuestionsViewModel){
-    // The type that we have in our question is an array list
-    val questions = viewmodel.data.value.data?.toMutableList()
-    if (viewmodel.data.value.loading == false) {
-        Log.d("Questions Composable", "Questions: ${questions?.size} ")
-    }
-
-}
 
 
 
