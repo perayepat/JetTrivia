@@ -17,8 +17,18 @@ class QuestionsViewModel @Inject constructor(private val repository: QuestionRep
     val data: MutableState<DataOrException<ArrayList<QuestionItem>, Boolean, Exception>>
     = mutableStateOf(DataOrException(null, true, Exception("no data")))
 
+    val numberOfQuestions = mutableStateOf(0)
+
     init {
         getAllQuestions()
+
+    }
+
+    private fun shuffleQuestions() {
+        data.value.data?.let {
+            it.shuffle()
+            data.value = DataOrException(ArrayList(it.take(10)), false, null)
+        }
     }
 
     private fun getAllQuestions(){
@@ -27,6 +37,8 @@ class QuestionsViewModel @Inject constructor(private val repository: QuestionRep
             data.value = repository.getAllQuestions()
             if (data.value.data.toString().isNotEmpty()) {
                 data.value.loading = false
+                shuffleQuestions()
+                numberOfQuestions.value = data.value.data?.size!!
             }
         }
     }

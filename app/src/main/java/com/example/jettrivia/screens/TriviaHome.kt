@@ -118,7 +118,7 @@ fun QuestionDisplay(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            QuestionsTracker(counter = questionIndex.value)
+            QuestionsTracker(counter = questionIndex.value, outOf = viewModel.numberOfQuestions.value)
             DrawDottedLine()
             QuestionToAnswer(text = question.question)
             //Choices
