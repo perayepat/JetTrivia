@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -29,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -51,11 +54,26 @@ fun TriviaHome(viewModel: QuestionsViewModel = hiltViewModel()){
 fun Questions(viewmodel: QuestionsViewModel){
     // The type that we have in our question is an array list
     val questions = viewmodel.data.value.data?.toMutableList()
+    val questionIndex = remember {
+        mutableStateOf(0)
+    }
+
     if (viewmodel.data.value.loading == true) {
         CircularProgressIndicator()
     } else {
+        val question = try {
+            questions?.get(questionIndex.value)
+        } catch (ex: Exception){
+            null
+        }
+
         if (questions != null) {
-            QuestionDisplay(question = questions[0])
+            QuestionDisplay(
+                question = question!!,
+                questionIndex = questionIndex,
+                viewModel = viewmodel){
+                questionIndex.value = questionIndex.value + 1
+            }
         }
     }
 }
@@ -64,13 +82,12 @@ fun Questions(viewmodel: QuestionsViewModel){
 @Composable
 fun QuestionDisplay(
     question: QuestionItem,
-//    questionIndex: MutableState<Int>,
-//    viewModel: QuestionsViewModel,
-//    onNextClicked: (Int) -> Unit
+    questionIndex: MutableState<Int>,
+    viewModel: QuestionsViewModel,
+    onNextClicked: (Int) -> Unit = {}
 ) {
     val surfaceModifier = Modifier
         .fillMaxSize()
-        .padding(4.dp)
     val columnModifier = Modifier.padding(12.dp)
 
     val choicesState = remember(question) {
@@ -101,7 +118,7 @@ fun QuestionDisplay(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            QuestionsTracker()
+            QuestionsTracker(counter = questionIndex.value)
             DrawDottedLine()
             QuestionToAnswer(text = question.question)
             //Choices
@@ -113,9 +130,12 @@ fun QuestionDisplay(
                             .padding(start = 16.dp),
                         colors =  RadioButtonDefaults.colors(
                             selectedColor = if (correctAnswerState.value == true && index == answerState.value) {
-                                Color.Green.copy(alpha = 0.2f)
-                            } else {
-                                Color.Red.copy(alpha = 0.2f)
+                                Color.Green
+                            } else if (correctAnswerState.value == false && index == answerState.value) {
+                                Color.Red
+                            }
+                            else {
+                                AppColours.mOffWhite
                             }
                         ),
                         selected = (answerState.value == index),
@@ -123,14 +143,50 @@ fun QuestionDisplay(
                             updateAnswer(index)
                         }
                     )
-                    Text(answerText,
-                        color = AppColours.mOffWhite)
+                    Text(text = annotatedString(correctAnswerState, index, answerState, answerText))
                 }
+            }
+            Button(
+                modifier = Modifier
+                    .padding(3.dp)
+                    .align(alignment = Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(34.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AppColours.mLightBlue),
+                onClick = { onNextClicked(questionIndex.value)}) {
+                Text(text = "Next",
+                    modifier = Modifier.padding(4.dp),
+                    color = AppColours.mOffWhite,
+                    fontSize = 17.sp)
             }
         }
     }
 }
 
+@Composable
+private fun annotatedString(
+    correctAnswerState: MutableState<Boolean?>,
+    index: Int,
+    answerState: MutableState<Int?>,
+    answerText: String
+): AnnotatedString {
+    val annotatedString = buildAnnotatedString {
+        withStyle(
+            style = SpanStyle(
+                fontWeight = FontWeight.Light,
+                color = if (correctAnswerState.value == true && index == answerState.value) {
+                    Color.Green
+                } else if (correctAnswerState.value == false && index == answerState.value) {
+                    Color.Red
+                } else {
+                    AppColours.mOffWhite
+                }, fontSize = 17.sp
+            )
+        ) {
+            append(answerText)
+        }
+    }
+    return annotatedString
+}
 
 
 fun CustomRowModifier() :Modifier {
